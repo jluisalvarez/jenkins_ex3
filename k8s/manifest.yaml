@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: flaskapp
-        image: jluisalvarez/flaskapp
+        image: jluisalvarez/flaskapp:$TAG
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
