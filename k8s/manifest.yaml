@@ -18,9 +18,9 @@ spec:
       containers:
       - name: flaskapp
         image: jluisalvarez/flaskapp
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
-        imagePullPolicy: Always
         resources:
           limits:
             cpu: 200m
