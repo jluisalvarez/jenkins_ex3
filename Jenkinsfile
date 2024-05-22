@@ -1,24 +1,19 @@
 pipeline {
 
     agent any
-
+    
     environment { 
         TAG = sh (returnStdout: true, script: 'date "+%d%m%Y-%H%M%S"').trim()
     }
 
-    stages {
+    stages {     
         stage('Build') {
             steps {
                 sh '''
                 echo "Building..."
-                docker build -t jluisalvarez/flask_hello:$TAG .
+                docker build -t jluisalvarez/flaskapp:$TAG .
                 '''
             }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing...'
-           }
         }
         stage('Publish') {
             steps {
@@ -26,7 +21,7 @@ pipeline {
                     sh '''
                         echo "Publishing..."
                         docker login -u="${USERNAME}" -p="${PASSWORD}"
-                        docker push jluisalvarez/flask_hello:$TAG
+                        docker push jluisalvarez/flaskapp:$TAG
                     ''' 
                 
                 }
@@ -36,19 +31,21 @@ pipeline {
             steps {
                 sh '''
                 echo "Cleaning..."
-                docker rmi jluisalvarez/flask_hello:$TAG
+                docker rmi jluisalvarez/flaskapp:$TAG
                 ''' 
                 
            }
         }
         stage('Deploy') {
             steps {
-                sh '''
-                echo "Deploying..."
-                kubectl version --client
-                '''
+                echo 'Deploying...'
+                withCredentials([file(credentialsId: 'gcp_credentials', variable: 'GC_KEY')]) {
+                    withEnv(["KUBECONFIG=/var/lib/jenkins/.kube/config"]) {
+                      sh("gcloud auth activate-service-account --key-file=${GC_KEY}")
+                      sh("envsubst < k8s/manifest.yaml | kubectl apply -f -")
+                    }
+                }
             }
         }
     }
 }
-
