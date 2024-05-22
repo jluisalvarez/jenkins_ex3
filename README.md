@@ -1,10 +1,12 @@
-# Jenkins Example 2. Pipeline Job
+# Jenkins Example 3. Deploy GKE K8S
 
 ## Requisitos
 
 - Java
 - Docker
 - Jenkins
+- gcloud
+- Cuenta de Servicio en GCP
 
 ## Pipeline
 
@@ -122,6 +124,57 @@ Sube la nueva versión al repositorio git, comprueba que la tarea de ejecuta y q
 
 
 ## GKE
+
+
+```
+pipeline {
+
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                sh '''
+                echo "Building..."
+                docker build -t jluisalvarez/flask_hello .
+                '''
+            }
+        }
+        stage('Publish') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh '''
+                        echo "Publishing..."
+                        docker login -u="${USERNAME}" -p="${PASSWORD}"
+                        docker push jluisalvarez/flask_hello
+                    ''' 
+                
+                }
+            }
+        }
+        stage('Clean') {
+            steps {
+                sh '''
+                echo "Cleaning..."
+                docker rmi jluisalvarez/flask_hello
+                ''' 
+                
+           }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying...'
+                withCredentials([file(credentialsId: 'gcp_credentials', variable: 'GC_KEY')]) {
+                    withEnv(["KUBECONFIG=/var/lib/jenkins/.kube/config"]) {
+                      sh("gcloud auth activate-service-account --key-file=${GC_KEY}")
+                      sh("kubectl version")
+                    }
+                }
+            }
+        }
+    }
+}
+```
 
 pipeline {
     agent any
