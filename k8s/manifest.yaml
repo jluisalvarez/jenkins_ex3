@@ -20,6 +20,7 @@ spec:
         image: jluisalvarez/flaskapp
         ports:
         - containerPort: 8080
+        imagePullPolicy: Always
         resources:
           limits:
             cpu: 200m
