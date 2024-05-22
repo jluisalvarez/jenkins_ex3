@@ -1,12 +1,12 @@
 # file app.py
 
-from flask import Flask
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
 @app.route('/')
 def holamundo():
-    return "Hola Mundo 2!!!!!"
+    return render_template("index.html", msg="Hola Mundo!")
     
 
 if __name__ == '__main__':
